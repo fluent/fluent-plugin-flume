@@ -1,0 +1,105 @@
+= Flume input/output plugin for Fluent
+
+== Overview
+
+This is a plugin for fluentd[https://github.com/fluentd] event collector.  This plugin adds the Flume[https://github.com/apache/flume] compatible interface to fluentd.
+
+== What's Flume?
+
+Flume[https://github.com/apache/flume] is a distributed, reliable, and available service for efficiently collecting, aggregating, and moving large amounts of log data.
+
+It uses Thrift[http://thrift.apache.org/], a cross-language RPC framework, to communicate between clients and servers.
+
+== What's Flume plugin for fluent?
+
+The Flume plugin for fluentd, which enables fluentd to talk the Flume protocol.  Flume protocol is defined as follows, in Thrift-IDL format:
+
+  typedef i64 Timestamp
+  
+  enum Priority {
+    FATAL = 0,
+    ERROR = 1,
+    WARN = 2,
+    INFO = 3,
+    DEBUG = 4,
+    TRACE = 5
+  }
+  
+  enum EventStatus {
+    ACK = 0,
+    COMMITED = 1,
+    ERR = 2
+  }
+  
+  struct ThriftFlumeEvent {
+    1: Timestamp timestamp,
+    2: Priority priority,
+    3: binary body,
+    4: i64 nanos,
+    5: string host,
+    6: map<string,binary> fields
+  }
+  
+  # Instead of using thrift's serialization, we just assume the contents are serialized already.
+  struct RawEvent {
+    1: binary raw
+  }
+  
+  service ThriftFlumeEventServer {
+    oneway void append( 1:ThriftFlumeEvent evt ),
+    oneway void rawAppend( 1:RawEvent evt),
+    EventStatus ackedAppend( 1: ThriftFlumeEvent evt ),
+    
+    void close(),
+  }
+
+A value that is stored in the ThriftFlumeEvent.fields map is used as fluentd 'tag'.  A key of the value enables be specified by users as configuration parameter.
+
+== How to use?
+
+fluent-plugin-flume contains both input and output.
+
+== Flume Input
+
+Please add the following configurations to fluent.conf.
+
+  # Flume input
+  <source>
+    type flume
+    port 56789
+  </source>
+
+These options are supported.
+
+* port: port number (default: 56789)
+* bind: bind address (default: 0.0.0.0)
+* server_type: server architecture either in 'simple', 'threaded', 'thread_pool', (default: simple)
+* is_framed: use framed protocol or not (default: false)
+* tag_field: key name of fluentd 'tag' that is stored in ThriftFlumeEvent.fields (default: nil)
+* default_tag: default fluentd 'tag' (default: 'category')
+* add_prefix: prefix string, added to the tag (default: nil)
+
+== Flume Output
+
+Please add the following configurations to fluent.conf.  This allows fluentd to output its logs into another Flume server.  Note that fluentd conveys semi-structured data while Flume conveys unstructured data.  Thus the plugin translates semi-structured data into JSON data and conveys it to Flume.
+
+  # Flume output
+  <match *>
+    type flume
+    host flume-host.local
+    port 56789
+  </match>
+
+These options are supported.
+
+* host: host name or address (default: localhost)
+* port: port number (default: 35863)
+* timeout: thrift protocol timeout (default: 30)
+* remove_prefix: prefix string, removed from the tag (default: nil)
+
+== Contributors
+
+== Copyright
+
+Copyright:: Copyright (c) 2012 Treasure Data, Inc.
+License::   Apache License, Version 2.0

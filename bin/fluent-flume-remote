@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+require 'thrift'
+require 'json'
+$:.unshift File.join(File.dirname(__FILE__), '../lib/fluent/plugin/thrift')
+require 'flume_types'
+require 'flume_constants'
+require 'thrift_flume_event_server'
+
+host = 'localhost'
+port = 3586
+
+socket = Thrift::Socket.new host, port.to_i
+transport = Thrift::BufferedTransport.new socket
+protocol = Thrift::BinaryProtocol.new transport
+client = ThriftFlumeEventServer::Client.new protocol
+transport.open
+
+# 2011/09/02 Kazuki Ohta <kazuki.ohta@gmail.com>
+# explicitly specify TCP_NODELAY for low-latency communication.
+raw_sock = socket.to_io
+raw_sock.setsockopt Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1
+
+entry = ThriftFlumeEvent.new(:body=>{'a'=>'b'}.to_json,
+                             :priority=>Priority::INFO,
+                             :timestamp=>(Time.now.to_i * 1000))
+client.append entry
+
+transport.close
