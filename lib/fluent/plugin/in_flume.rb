@@ -24,11 +24,11 @@ class FlumeInput < Input
   config_param :bind,            :string,  :default => '0.0.0.0'
   config_param :server_type,     :string,  :default => 'simple'
   config_param :is_framed,       :bool,    :default => false
-  config_param :body_size_limit, :size,    :default => 32*1024*1024  # TODO default
+  config_param :body_size_limit, :size,    :default => 32 * 1024 * 1024
   config_param :tag_field,	 :string,  :default => nil
   config_param :default_tag,	 :string,  :default => 'category'
   config_param :add_prefix,      :string,  :default => nil
-  config_param :message_format,  :string,  :default => 'text'
+  config_param :msg_format,      :string,  :default => 'text'
 
   def initialize
     require 'thrift'
@@ -51,7 +51,7 @@ class FlumeInput < Input
     handler.tag_field = @tag_field
     handler.default_tag = @default_tag
     handler.add_prefix = @add_prefix
-    handler.message_format = @message_format
+    handler.msg_format = @msg_format
     processor = ThriftFlumeEventServer::Processor.new handler
 
     @transport = Thrift::ServerSocket.new @bind, @port
@@ -61,8 +61,8 @@ class FlumeInput < Input
       raise ConfigError, "in_flume: unsupported is_framed '#{@is_framed}'"
     end
 
-    unless ['text', 'json'].include? @message_format
-      raise 'Unknown format: message_format=#{@message_format}'
+    unless ['text', 'json'].include? @msg_format
+      raise 'Unknown format: msg_format=#{@msg_format}'
     end
 
     # 2011/09/29 Kazuki Ohta <kazuki.ohta@gmail.com>
@@ -92,8 +92,8 @@ class FlumeInput < Input
   end
 
   def shutdown
-    @transport.close unless @transport.closed? # TODO
-    #@thread.join # TODO
+    @transport.close unless @transport.closed?
+    #@thread.join
   end
 
   def run
@@ -108,7 +108,7 @@ class FlumeInput < Input
     attr_accessor :tag_field
     attr_accessor :default_tag
     attr_accessor :add_prefix
-    attr_accessor :message_format
+    attr_accessor :msg_format
 
     def append(evt)
       begin
@@ -138,8 +138,28 @@ class FlumeInput < Input
     end
 
     def ackedAppend(evt)
-      $log.error "ackedAppend is not implemented yet: #{evt}"
-      EventStatus::OK
+      begin
+        record = create_record(evt)
+        if @tag_field
+          tag = evt.fieldss[@tag_field] || @default_tag
+          unless tag
+            return # ignore
+          end
+        else
+          tag = @default_tag
+        end
+        timestamp = evt.timestamp.to_i
+        if @add_prefix
+          Engine.emit(@add_prefix + '.' + tag, timestamp, record)
+        else
+          Engine.emit(tag, timestamp, record)
+        end
+        return EventStatus::ACK
+      rescue => e
+        $log.error "unexpected error", :error=>$!.to_s
+        $log.error_backtrace
+        return EventStatus::ERR
+      end
     end
 
     def close()
@@ -147,7 +167,7 @@ class FlumeInput < Input
 
     private
     def create_record(evt)
-      case @message_format
+      case @msg_format
       when 'text'
         return {'message'=>evt.body.force_encoding('UTF-8')}
       when 'json'
@@ -155,7 +175,7 @@ class FlumeInput < Input
         raise 'body must be a Hash, if json_body=true' unless js.is_a?(Hash)
         return js
       else
-        raise 'Invalid format: #{@message_format}'
+        raise 'Invalid format: #{@msg_format}'
       end
     end
   end
