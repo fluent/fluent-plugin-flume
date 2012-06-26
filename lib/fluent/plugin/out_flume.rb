@@ -32,11 +32,12 @@ class FlumeOutput < BufferedOutput
     require 'flume_types'
     require 'flume_constants'
     require 'thrift_flume_event_server'
-
     super
   end
 
   def configure(conf)
+    # override default buffer_chunk_limit
+    conf['buffer_chunk_limit'] ||= '1m'
     super
   end
 
@@ -64,28 +65,26 @@ class FlumeOutput < BufferedOutput
   end
 
   def write(chunk)
-    records = []
-    chunk.msgpack_each { |arr|
-      records << arr
-    }
-
     transport = Thrift::Socket.new @host, @port, @timeout
     #transport = Thrift::FramedTransport.new socket
     #protocol = Thrift::BinaryProtocol.new transport, false, false
     protocol = Thrift::BinaryProtocol.new transport
     client = ThriftFlumeEventServer::Client.new protocol
 
+    count = 0
     transport.open
     $log.debug "thrift client opend: #{client}"
     begin
-      records.each { |r|
-        tag, time, record = r
-        entry = ThriftFlumeEvent.new(:body=>record.to_json.to_s.force_encoding('UTF-8'),
-                                     :priority=>Priority::INFO,
-                                     :timestamp=>time,
-                                     :fieldss=>{'category'=>tag})
+      chunk.msgpack_each { |arr|
+        tag, time, record = arr
+        entry = ThriftFlumeEvent.new(:body      => record.to_json.to_s.force_encoding('UTF-8'),
+                                     :priority  => Priority::INFO,
+                                     :timestamp => time,
+                                     :fieldss   => { 'category' => tag })
         client.append entry
+        count += 1
       }
+      $log.info "Writing #{count} entries to flume"
     ensure
       $log.debug "thrift client closing: #{client}"
       transport.close
