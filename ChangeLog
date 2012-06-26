@@ -1,4 +1,5 @@
 Release 0.1.1 - 20XX/XX/XX
 * updated thrift to 0.8.0
+* overrode buffer_chunk_limit for more reliability (ISSUE-1)
 
 Release 0.1.0 - 2012/05/02
