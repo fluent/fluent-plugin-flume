@@ -84,7 +84,7 @@ class FlumeOutput < BufferedOutput
         client.append entry
         count += 1
       }
-      $log.info "Writing #{count} entries to flume"
+      $log.debug "Writing #{count} entries to flume"
     ensure
       $log.debug "thrift client closing: #{client}"
       transport.close
