@@ -101,5 +101,5 @@ These options are supported.
 
 == Copyright
 
-Copyright:: Copyright (c) 2012 Treasure Data, Inc.
+Copyright:: Copyright (c) 2012 - 2013 Treasure Data, Inc.
 License::   Apache License, Version 2.0
