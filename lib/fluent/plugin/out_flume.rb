@@ -26,6 +26,10 @@ class FlumeOutput < BufferedOutput
   config_param :remove_prefix,    :string, :default => nil
   config_param :default_category, :string, :default => 'unknown'
 
+  unless method_defined?(:log)
+    define_method(:log) { $log }
+  end
+
   def initialize
     require 'thrift'
     $:.unshift File.join(File.dirname(__FILE__), 'thrift')
@@ -73,7 +77,7 @@ class FlumeOutput < BufferedOutput
 
     count = 0
     transport.open
-    $log.debug "thrift client opend: #{client}"
+    log.debug "thrift client opend: #{client}"
     begin
       chunk.msgpack_each { |arr|
         tag, time, record = arr
@@ -84,9 +88,9 @@ class FlumeOutput < BufferedOutput
         client.append entry
         count += 1
       }
-      $log.debug "Writing #{count} entries to flume"
+      log.debug "Writing #{count} entries to flume"
     ensure
-      $log.debug "thrift client closing: #{client}"
+      log.debug "thrift client closing: #{client}"
       transport.close
     end
   end

@@ -30,6 +30,10 @@ class FlumeInput < Input
   config_param :add_prefix,      :string,  :default => nil
   config_param :msg_format,      :string,  :default => 'text'
 
+  unless method_defined?(:log)
+    define_method(:log) { $log }
+  end
+
   def initialize
     require 'thrift'
     $:.unshift File.join(File.dirname(__FILE__), 'thrift')
@@ -45,13 +49,14 @@ class FlumeInput < Input
   end
 
   def start
-    $log.debug "listening flume on #{@bind}:#{@port}"
+    log.debug "listening flume on #{@bind}:#{@port}"
 
     handler = FluentFlumeHandler.new
     handler.tag_field = @tag_field
     handler.default_tag = @default_tag
     handler.add_prefix = @add_prefix
     handler.msg_format = @msg_format
+    handler.log = log
     processor = ThriftFlumeEventServer::Processor.new handler
 
     @transport = Thrift::ServerSocket.new @bind, @port
@@ -97,11 +102,11 @@ class FlumeInput < Input
   end
 
   def run
-    $log.debug "starting server: #{@server}"
+    log.debug "starting server: #{@server}"
     @server.serve
   rescue
-    $log.error "unexpected error", :error=>$!.to_s
-    $log.error_backtrace
+    log.error "unexpected error", :error=>$!.to_s
+    log.error_backtrace
   end
 
   class FluentFlumeHandler
@@ -109,6 +114,7 @@ class FlumeInput < Input
     attr_accessor :default_tag
     attr_accessor :add_prefix
     attr_accessor :msg_format
+    attr_accessor :log
 
     def append(evt)
       begin
@@ -128,13 +134,13 @@ class FlumeInput < Input
           Engine.emit(tag, timestamp, record)
         end
       rescue => e
-        $log.error "unexpected error", :error=>$!.to_s
-        $log.error_backtrace
+        log.error "unexpected error", :error=>$!.to_s
+        log.error_backtrace
       end
     end
 
     def rawAppend(evt)
-      $log.error "rawAppend is not implemented yet: #{evt}"
+      log.error "rawAppend is not implemented yet: #{evt}"
     end
 
     def ackedAppend(evt)
@@ -156,8 +162,8 @@ class FlumeInput < Input
         end
         return EventStatus::ACK
       rescue => e
-        $log.error "unexpected error", :error=>$!.to_s
-        $log.error_backtrace
+        log.error "unexpected error", :error=>$!.to_s
+        log.error_backtrace
         return EventStatus::ERR
       end
     end
