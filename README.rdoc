@@ -1,8 +1,8 @@
-= Flume input/output plugin for Fluent
+= Flume input/output plugin for Fluentd[http://fluentd.org/]
 
 == Overview
 
-This is a plugin for fluentd[https://github.com/fluentd] event collector.  This plugin adds the Flume[https://github.com/apache/flume] compatible interface to fluentd.
+This is a plugin for fluentd[http://fluentd.org/] data collector.  This plugin adds the Flume[https://github.com/apache/flume] compatible interface to fluentd.
 
 == What's Flume?
 
