@@ -77,7 +77,7 @@ class FlumeOutput < BufferedOutput
 
     count = 0
     transport.open
-    log.debug "thrift client opend: #{client}"
+    log.debug "thrift client opened: #{client}"
     begin
       chunk.msgpack_each { |arr|
         tag, time, record = arr
