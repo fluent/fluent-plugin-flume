@@ -82,8 +82,8 @@ class FlumeOutput < BufferedOutput
       chunk.msgpack_each { |tag, time, record|
         entry = ThriftFlumeEvent.new(:body      => record.to_json.to_s.force_encoding('UTF-8'),
                                      :headers   => {
-                                       :timestamp => time,
-                                       :tag       => tag,
+                                       'timestamp' => time.to_s,
+                                       'tag'       => tag,
                                      })
         client.append entry
         count += 1
