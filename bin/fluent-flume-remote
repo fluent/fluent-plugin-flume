@@ -22,8 +22,8 @@ raw_sock.setsockopt Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1
 
 entry = ThriftFlumeEvent.new(:body=>{'a'=>'b'}.to_json,
                              :headers => {
-                               :timestamp => (Time.now.to_i * 1000),
-                               :tag       => tag,
+                               'timestamp' => (Time.now.to_i * 1000).to_s,
+                               'tag'       => tag,
                              })
 client.append entry
 
