@@ -35,7 +35,7 @@ class FlumeOutput < BufferedOutput
     $:.unshift File.join(File.dirname(__FILE__), 'thrift')
     require 'flume_types'
     require 'flume_constants'
-    require 'thrift_flume_event_server'
+    require 'thrift_source_protocol'
     super
   end
 
@@ -69,11 +69,11 @@ class FlumeOutput < BufferedOutput
   end
 
   def write(chunk)
-    transport = Thrift::Socket.new @host, @port, @timeout
-    #transport = Thrift::FramedTransport.new socket
+    socket = Thrift::Socket.new @host, @port, @timeout
+    transport = Thrift::FramedTransport.new socket
     #protocol = Thrift::BinaryProtocol.new transport, false, false
-    protocol = Thrift::BinaryProtocol.new transport
-    client = ThriftFlumeEventServer::Client.new protocol
+    protocol = Thrift::CompactProtocol.new transport
+    client = ThriftSourceProtocol::Client.new protocol
 
     count = 0
     transport.open
@@ -82,9 +82,10 @@ class FlumeOutput < BufferedOutput
       chunk.msgpack_each { |arr|
         tag, time, record = arr
         entry = ThriftFlumeEvent.new(:body      => record.to_json.to_s.force_encoding('UTF-8'),
-                                     :priority  => Priority::INFO,
-                                     :timestamp => time,
-                                     :fieldss   => { 'category' => tag })
+                                     :headers   => {
+                                       :timestamp => time,
+                                       :tag       => tag,
+                                     })
         client.append entry
         count += 1
       }
