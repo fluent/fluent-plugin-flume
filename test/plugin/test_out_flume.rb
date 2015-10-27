@@ -90,26 +90,12 @@ class FlumeOutputTest < Test::Unit::TestCase
     d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
     d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
     d.run
-    emits = d.emits
-    assert_equal [
-        [d.tag, time, {"k11"=>"v11", "k12"=>"v12"}.to_json.to_s],
-        [d.tag, time, {"k21"=>"v21", "k22"=>"v22"}.to_json.to_s],
-      ], emits
 
     d = create_driver(CONFIG + %[
       remove_prefix test
     ], 'test.flumeplugin')
     assert_equal 'test.flumeplugin', d.tag
-    d.run do
-      d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-      d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
-    end
-
-    emits = d.emits
-    assert_equal [
-        ['flumeplugin', time, {"k11"=>"v11", "k12"=>"v12"}.to_json.to_s],
-        ['flumeplugin', time, {"k21"=>"v21", "k22"=>"v22"}.to_json.to_s],
-      ], emits
+    d.run
 
     d = create_driver(CONFIG + %[
       remove_prefix test
@@ -117,10 +103,6 @@ class FlumeOutputTest < Test::Unit::TestCase
     assert_equal 'xxx.test.flumeplugin', d.tag
     d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
     d.run
-    emits = d.emits
-    assert_equal [
-        ['xxx.test.flumeplugin', time, {"k11"=>"v11", "k12"=>"v12"}.to_json.to_s],
-      ], emits
 
     d = create_driver(CONFIG + %[
       remove_prefix test
@@ -128,9 +110,5 @@ class FlumeOutputTest < Test::Unit::TestCase
     assert_equal 'test', d.tag
     d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
     d.run
-    emits = d.emits
-    assert_equal [
-        [d.instance.default_category, time, {"k11"=>"v11", "k12"=>"v12"}.to_json.to_s],
-      ], emits
   end
 end
