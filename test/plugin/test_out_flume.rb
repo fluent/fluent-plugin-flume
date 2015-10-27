@@ -160,7 +160,7 @@ class FlumeOutputTest < Test::Unit::TestCase
       @last = []
     end
     def append(evt)
-      @last << [evt.fieldss['category'], evt.timestamp, evt.body]
+      @last << [evt.headers, evt.body]
     end
     def rawAppend(evt)
     end
