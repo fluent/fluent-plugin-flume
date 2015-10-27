@@ -79,8 +79,7 @@ class FlumeOutput < BufferedOutput
     transport.open
     log.debug "thrift client opened: #{client}"
     begin
-      chunk.msgpack_each { |arr|
-        tag, time, record = arr
+      chunk.msgpack_each { |tag, time, record|
         entry = ThriftFlumeEvent.new(:body      => record.to_json.to_s.force_encoding('UTF-8'),
                                      :headers   => {
                                        :timestamp => time,
