@@ -12,8 +12,9 @@ begin
     gemspec.homepage = "https://github.com/muga/fluent-plugin-flume"
     gemspec.has_rdoc = false
     gemspec.require_paths = ["lib"]
-    gemspec.add_dependency "fluentd", "~> 0.10.16"
-    gemspec.add_dependency "thrift", "~> 0.8.0"
+    gemspec.add_development_dependency "test-unit", "~> 3.1"
+    gemspec.add_dependency "fluentd", "~> 0.12.0"
+    gemspec.add_dependency "thrift", "~> 0.9.0"
     gemspec.test_files = Dir["test/**/*.rb"]
     gemspec.files = Dir["bin/**/*", "lib/**/*", "test/**/*.rb"] +
       %w[example.conf VERSION AUTHORS Rakefile fluent-plugin-flume.gemspec]

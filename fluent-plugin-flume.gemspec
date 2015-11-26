@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
     "lib/fluent/plugin/thrift/flume.thrift.orig",
     "lib/fluent/plugin/thrift/flume_constants.rb",
     "lib/fluent/plugin/thrift/flume_types.rb",
-    "lib/fluent/plugin/thrift/thrift_flume_event_server.rb",
+    "lib/fluent/plugin/thrift/thrift_source_protocol.rb",
     "test/plugin/test_in_flume.rb",
     "test/plugin/test_out_flume.rb"
   ]
@@ -42,15 +42,17 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<fluentd>, ["~> 0.10.16"])
-      s.add_runtime_dependency(%q<thrift>, ["~> 0.8.0"])
+      s.add_development_dependency(%q<test-unit>, ["~> 3.1"])
+      s.add_runtime_dependency(%q<fluentd>, ["~> 0.12.0"])
+      s.add_runtime_dependency(%q<thrift>, ["~> 0.9.0"])
     else
-      s.add_dependency(%q<fluentd>, ["~> 0.10.16"])
-      s.add_dependency(%q<thrift>, ["~> 0.8.0"])
+      s.add_development_dependency(%q<test-unit>, ["~> 3.1"])
+      s.add_dependency(%q<fluentd>, ["~> 0.12.0"])
+      s.add_dependency(%q<thrift>, ["~> 0.9.0"])
     end
   else
-    s.add_dependency(%q<fluentd>, ["~> 0.10.16"])
-    s.add_dependency(%q<thrift>, ["~> 0.8.0"])
+    s.add_development_dependency(%q<test-unit>, ["~> 3.1"])
+    s.add_dependency(%q<fluentd>, ["~> 0.12.0"])
+    s.add_dependency(%q<thrift>, ["~> 0.9.0"])
   end
 end
-
