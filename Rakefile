@@ -1,29 +1,9 @@
+require 'bundler'
+Bundler::GemHelper.install_tasks
+
 require 'rake'
 require 'rake/testtask'
 require 'rake/clean'
-
-begin
-  require 'jeweler'
-  Jeweler::Tasks.new do |gemspec|
-    gemspec.name = "fluent-plugin-flume"
-    gemspec.summary = "Flume Input/Output plugin for Fluentd event collector"
-    gemspec.author = "Muga Nishizawa"
-    gemspec.email = "muga.nishizawa@gmail.com"
-    gemspec.homepage = "https://github.com/muga/fluent-plugin-flume"
-    gemspec.has_rdoc = false
-    gemspec.require_paths = ["lib"]
-    gemspec.add_development_dependency "test-unit", "~> 3.1"
-    gemspec.add_dependency "fluentd", "~> 0.12.0"
-    gemspec.add_dependency "thrift", "~> 0.9.0"
-    gemspec.test_files = Dir["test/**/*.rb"]
-    gemspec.files = Dir["bin/**/*", "lib/**/*", "test/**/*.rb"] +
-      %w[example.conf VERSION AUTHORS Rakefile fluent-plugin-flume.gemspec]
-    gemspec.executables = ['fluent-flume-remote']
-  end
-  Jeweler::GemcutterTasks.new
-rescue LoadError
-  puts "Jeweler not available. Install it with: gem install jeweler"
-end
 
 task "thrift_gen" do
   system "mkdir -p tmp"
@@ -33,6 +13,7 @@ task "thrift_gen" do
 end
 
 Rake::TestTask.new(:test) do |t|
+  t.libs << 'lib' << 'test'
   t.test_files = Dir['test/plugin/*.rb']
   t.ruby_opts = ['-rubygems'] if defined? Gem
   t.ruby_opts << '-I.'
