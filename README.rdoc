@@ -79,6 +79,8 @@ These options are supported.
 * default_tag: default fluentd 'tag' (default: 'category')
 * add_prefix: prefix string, added to the tag (default: nil)
 
+Use flume-ng-fluentd-sink[https://github.com/cosmo0920/flume-ng-fluentd-sink] to send events from flume-ng to fluentd.
+
 == Flume Output
 
 Please add the following configurations to fluent.conf.  This allows fluentd to output its logs into another Flume server.  Note that fluentd conveys semi-structured data while Flume conveys unstructured data.  Thus the plugin translates semi-structured data into JSON data and conveys it to Flume.
