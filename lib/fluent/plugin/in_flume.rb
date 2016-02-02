@@ -49,6 +49,7 @@ class FlumeInput < Input
 
   def start
     log.debug "listening flume on #{@bind}:#{@port}"
+    log.warn "[in_flume] This plugin is obsoleted for Flume NG. You should consider to use flume-ng-fluentd-sink."
 
     handler = FluentFlumeHandler.new
     handler.tag_field = @tag_field
