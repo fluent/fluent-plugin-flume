@@ -185,8 +185,6 @@ class FlumeInputTest < Test::Unit::TestCase
   end
 
   def setup
-    omit("Latest flume thrift protocol does not have event server.")
-
     Fluent::FlumeInput.new
     Fluent::Test.setup
   end
