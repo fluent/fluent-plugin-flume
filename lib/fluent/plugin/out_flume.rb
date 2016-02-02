@@ -32,8 +32,8 @@ class FlumeOutput < BufferedOutput
 
   def initialize
     require 'thrift'
+    require 'fluent/plugin/thrift/flume_types'
     $:.unshift File.join(File.dirname(__FILE__), 'thrift')
-    require 'flume_types'
     require 'flume_constants'
     require 'thrift_source_protocol'
     super

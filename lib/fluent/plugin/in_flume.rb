@@ -36,11 +36,10 @@ class FlumeInput < Input
 
   def initialize
     require 'thrift'
-    $:.unshift File.join(File.dirname(__FILE__), 'thrift')
-    require 'flume_types'
+    require 'fluent/plugin/old_thrift/flume_types'
+    $:.unshift File.join(File.dirname(__FILE__), 'old_thrift')
     require 'flume_constants'
     require 'thrift_flume_event_server'
-
     super
   end
 
