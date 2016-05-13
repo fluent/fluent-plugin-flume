@@ -80,7 +80,7 @@ class FlumeOutput < BufferedOutput
     log.debug "thrift client opened: #{client}"
     begin
       chunk.msgpack_each { |tag, time, record|
-        entry = ThriftFlumeEvent.new(:body      => record.to_json.to_s.force_encoding('UTF-8'),
+        entry = ThriftFlumeEvent.new(:body      => Yajl::Encoder.encode(record),
                                      :headers   => {
                                        'timestamp' => time.to_s,
                                        'tag'       => tag,
