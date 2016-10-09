@@ -83,7 +83,7 @@ Use flume-ng-fluentd-sink[https://github.com/cosmo0920/flume-ng-fluentd-sink] to
 
 == Flume Output
 
-Please add the following configurations to fluent.conf.  This allows fluentd to output its logs into another Flume server.  Note that fluentd conveys semi-structured data while Flume conveys unstructured data.  Thus the plugin translates semi-structured data into JSON data and conveys it to Flume.
+Please add the following configurations to fluent.conf.  This allows fluentd to output its logs into another Flume server.  Note that fluentd conveys semi-structured data while Flume conveys unstructured data.  Thus the plugin translates semi-structured data into JSON data by default and conveys it to Flume.  The format can be adjusted via formatters.
 
   # Flume output
   <match *>
@@ -98,6 +98,7 @@ These options are supported.
 * port: port number (default: 35863)
 * timeout: thrift protocol timeout (default: 30)
 * remove_prefix: prefix string, removed from the tag (default: nil)
+* format: The format of the thrift body (default: json)
 
 == Contributors
 
