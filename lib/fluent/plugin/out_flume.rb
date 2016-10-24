@@ -74,7 +74,7 @@ class FlumeOutput < BufferedOutput
       tag = (tag[@removed_length..-1] || @default_category)
     end
     fr = @formatter.format(tag, time, record)
-    fr = fr.chomp if @trim_nl
+    fr.chomp! if @trim_nl
     [tag, time, fr].to_msgpack
   end
 
