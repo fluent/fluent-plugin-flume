@@ -86,15 +86,15 @@ class FlumeOutput < BufferedOutput
     client = ThriftSourceProtocol::Client.new protocol
 
     count = 0
+    header = {}
     transport.open
     log.debug "thrift client opened: #{client}"
     begin
       chunk.msgpack_each { |tag, time, record|
+        header['timestamp'.freeze] = time.to_s
+        header['tag'.freeze] = tag
         entry = ThriftFlumeEvent.new(:body    => record.force_encoding('UTF-8'),
-                                     :headers => {
-                                       'timestamp' => time.to_s,
-                                       'tag'       => tag,
-                                     })
+                                     :headers => header)
         client.append entry
         count += 1
       }
