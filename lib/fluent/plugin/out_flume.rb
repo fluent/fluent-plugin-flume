@@ -15,6 +15,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
+
+require 'fluent/output'
+
 module Fluent
 
 class FlumeOutput < BufferedOutput
@@ -27,6 +30,7 @@ class FlumeOutput < BufferedOutput
   config_param :default_category, :string, :default => 'unknown'
   desc "The format of the thrift body. (default: json)"
   config_param :format, :string, default: 'json'
+  config_param :trim_nl, :bool, default: true
 
   unless method_defined?(:log)
     define_method(:log) { $log }
@@ -66,11 +70,12 @@ class FlumeOutput < BufferedOutput
 
   def format(tag, time, record)
     if @remove_prefix and
-        ( (tag[0, @removed_length] == @removed_prefix_string and tag.length > @removed_length) or
-          tag == @remove_prefix)
+        ((tag[0, @removed_length] == @removed_prefix_string and tag.length > @removed_length) or tag == @remove_prefix)
       tag = (tag[@removed_length..-1] || @default_category)
     end
-    [tag, time, @formatter.format(tag, time, record)].to_msgpack
+    fr = @formatter.format(tag, time, record)
+    fr.chomp! if @trim_nl
+    [tag, time, fr].to_msgpack
   end
 
   def write(chunk)
@@ -81,15 +86,15 @@ class FlumeOutput < BufferedOutput
     client = ThriftSourceProtocol::Client.new protocol
 
     count = 0
+    header = {}
     transport.open
     log.debug "thrift client opened: #{client}"
     begin
       chunk.msgpack_each { |tag, time, record|
-        entry = ThriftFlumeEvent.new(:body      => record.force_encoding('UTF-8'),
-                                     :headers   => {
-                                       'timestamp' => time.to_s,
-                                       'tag'       => tag,
-                                     })
+        header['timestamp'.freeze] = time.to_s
+        header['tag'.freeze] = tag
+        entry = ThriftFlumeEvent.new(:body    => record.force_encoding('UTF-8'),
+                                     :headers => header)
         client.append entry
         count += 1
       }
