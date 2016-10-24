@@ -25,6 +25,8 @@ class FlumeOutput < BufferedOutput
   config_param :timeout,   :integer, :default => 30
   config_param :remove_prefix,    :string, :default => nil
   config_param :default_category, :string, :default => 'unknown'
+  desc "The format of the thrift body. (default: json)"
+  config_param :format, :string, default: 'json'
 
   unless method_defined?(:log)
     define_method(:log) { $log }
@@ -42,7 +44,11 @@ class FlumeOutput < BufferedOutput
   def configure(conf)
     # override default buffer_chunk_limit
     conf['buffer_chunk_limit'] ||= '1m'
+
     super
+
+    @formatter = Plugin.new_formatter(@format)
+    @formatter.configure(conf)
   end
 
   def start
@@ -62,10 +68,9 @@ class FlumeOutput < BufferedOutput
     if @remove_prefix and
         ( (tag[0, @removed_length] == @removed_prefix_string and tag.length > @removed_length) or
           tag == @remove_prefix)
-      [(tag[@removed_length..-1] || @default_category), time, record].to_msgpack
-    else
-      [tag, time, record].to_msgpack
+      tag = (tag[@removed_length..-1] || @default_category)
     end
+    [tag, time, @formatter.format(tag, time, record)].to_msgpack
   end
 
   def write(chunk)
@@ -80,7 +85,7 @@ class FlumeOutput < BufferedOutput
     log.debug "thrift client opened: #{client}"
     begin
       chunk.msgpack_each { |tag, time, record|
-        entry = ThriftFlumeEvent.new(:body      => record.to_json.to_s.force_encoding('UTF-8'),
+        entry = ThriftFlumeEvent.new(:body      => record.force_encoding('UTF-8'),
                                      :headers   => {
                                        'timestamp' => time.to_s,
                                        'tag'       => tag,
