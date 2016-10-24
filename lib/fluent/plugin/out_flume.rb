@@ -27,6 +27,7 @@ class FlumeOutput < BufferedOutput
   config_param :default_category, :string, :default => 'unknown'
   desc "The format of the thrift body. (default: json)"
   config_param :format, :string, default: 'json'
+  config_param :trim_nl, :bool, default: true
 
   unless method_defined?(:log)
     define_method(:log) { $log }
@@ -70,7 +71,9 @@ class FlumeOutput < BufferedOutput
           tag == @remove_prefix)
       tag = (tag[@removed_length..-1] || @default_category)
     end
-    [tag, time, @formatter.format(tag, time, record)].to_msgpack
+    fr = @formatter.format(tag, time, record)
+    fr = fr.chomp if @trim_nl
+    [tag, time, fr].to_msgpack
   end
 
   def write(chunk)

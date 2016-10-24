@@ -99,6 +99,7 @@ These options are supported.
 * timeout: thrift protocol timeout (default: 30)
 * remove_prefix: prefix string, removed from the tag (default: nil)
 * format: The format of the thrift body (default: json)
+* trim_nl: Trim new line from thrift body (default: true)
 
 == Contributors
 
