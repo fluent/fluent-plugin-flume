@@ -70,8 +70,7 @@ class FlumeOutput < BufferedOutput
 
   def format(tag, time, record)
     if @remove_prefix and
-        ( (tag[0, @removed_length] == @removed_prefix_string and tag.length > @removed_length) or
-          tag == @remove_prefix)
+        ((tag[0, @removed_length] == @removed_prefix_string and tag.length > @removed_length) or tag == @remove_prefix)
       tag = (tag[@removed_length..-1] || @default_category)
     end
     fr = @formatter.format(tag, time, record)
@@ -91,8 +90,8 @@ class FlumeOutput < BufferedOutput
     log.debug "thrift client opened: #{client}"
     begin
       chunk.msgpack_each { |tag, time, record|
-        entry = ThriftFlumeEvent.new(:body      => record.force_encoding('UTF-8'),
-                                     :headers   => {
+        entry = ThriftFlumeEvent.new(:body    => record.force_encoding('UTF-8'),
+                                     :headers => {
                                        'timestamp' => time.to_s,
                                        'tag'       => tag,
                                      })
