@@ -55,6 +55,7 @@ module Fluent
       handler.add_prefix = @add_prefix
       handler.msg_format = @msg_format
       handler.log = log
+      handler.router = router
       processor = ThriftFlumeEventServer::Processor.new handler
 
       @transport = Thrift::ServerSocket.new @bind, @port
@@ -113,6 +114,7 @@ module Fluent
       attr_accessor :add_prefix
       attr_accessor :msg_format
       attr_accessor :log
+      attr_accessor :router
 
       def append(evt)
         begin
@@ -127,9 +129,9 @@ module Fluent
           end
           timestamp = evt.timestamp.to_i
           if @add_prefix
-            Engine.emit(@add_prefix + '.' + tag, timestamp, record)
+            router.emit(@add_prefix + '.' + tag, timestamp, record)
           else
-            Engine.emit(tag, timestamp, record)
+            router.emit(tag, timestamp, record)
           end
         rescue => e
           log.error "unexpected error", :error=>$!.to_s
@@ -154,9 +156,9 @@ module Fluent
           end
           timestamp = evt.timestamp.to_i
           if @add_prefix
-            Engine.emit(@add_prefix + '.' + tag, timestamp, record)
+            router.emit(@add_prefix + '.' + tag, timestamp, record)
           else
-            Engine.emit(tag, timestamp, record)
+            router.emit(tag, timestamp, record)
           end
           return EventStatus::ACK
         rescue => e
