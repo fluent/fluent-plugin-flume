@@ -160,9 +160,9 @@ class FlumeInputTest < Test::Unit::TestCase
   def test_message_format_json
     d = create_driver(CONFIG + %[
       tag_field category
-      message_format json
+      msg_format json
     ])
-    assert_equal 'json', d.instance.message_format
+    assert_equal 'json', d.instance.msg_format
 
     time = Time.parse("2011-01-02 13:14:15 UTC").to_i
     Fluent::Engine.now = time
@@ -185,8 +185,6 @@ class FlumeInputTest < Test::Unit::TestCase
   end
 
   def setup
-    omit("Latest flume thrift protocol does not have event server.")
-
     Fluent::FlumeInput.new
     Fluent::Test.setup
   end

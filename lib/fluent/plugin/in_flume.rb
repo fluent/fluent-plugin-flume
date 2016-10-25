@@ -39,11 +39,10 @@ class FlumeInput < Input
 
   def initialize
     require 'thrift'
-    $:.unshift File.join(File.dirname(__FILE__), 'thrift')
-    require 'flume_types'
+    require 'fluent/plugin/old_thrift/flume_types'
+    $:.unshift File.join(File.dirname(__FILE__), 'old_thrift')
     require 'flume_constants'
     require 'thrift_flume_event_server'
-
     super
   end
 
@@ -53,6 +52,7 @@ class FlumeInput < Input
 
   def start
     log.debug "listening flume on #{@bind}:#{@port}"
+    log.warn "[in_flume] This plugin is obsoleted for Flume NG. You should consider to use flume-ng-fluentd-sink."
 
     handler = FluentFlumeHandler.new
     handler.tag_field = @tag_field
