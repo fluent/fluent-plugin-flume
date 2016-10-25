@@ -63,14 +63,18 @@ module Fluent
       end
     end
 
-    def format(tag, time, record)
+    def emit(tag, es, chain)
       if @remove_prefix and
          ((tag[0, @removed_length] == @removed_prefix_string and tag.length > @removed_length) or tag == @remove_prefix)
         tag = (tag[@removed_length..-1] || @default_category)
       end
+      super(tag, es, chain, tag)
+    end
+
+    def format(tag, time, record)
       fr = @formatter.format(tag, time, record)
       fr.chomp! if @trim_nl
-      [tag, time, fr].to_msgpack
+      [time, fr].to_msgpack
     end
 
     def write(chunk)
@@ -80,12 +84,13 @@ module Fluent
       protocol = Thrift::CompactProtocol.new transport
       client = ThriftSourceProtocol::Client.new protocol
 
+      tag = chunk.key
       count = 0
       header = {}
       transport.open
       log.debug "thrift client opened: #{client}"
       begin
-        chunk.msgpack_each { |tag, time, record|
+        chunk.msgpack_each { |time, record|
           header['timestamp'.freeze] = time.to_s
           header['tag'.freeze] = tag
           entry = ThriftFlumeEvent.new(:body    => record.force_encoding('UTF-8'),

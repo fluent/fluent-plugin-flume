@@ -41,8 +41,8 @@ class FlumeOutputTest < Test::Unit::TestCase
     d = create_driver
     d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
     d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
-    d.expect_format [d.tag, time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
-    d.expect_format [d.tag, time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
+    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
+    d.expect_format [time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
     d.run
 
     d = create_driver(CONFIG + %[
@@ -52,8 +52,8 @@ class FlumeOutputTest < Test::Unit::TestCase
 
     d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
     d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
-    d.expect_format ['flumeplugin', time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
-    d.expect_format ['flumeplugin', time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
+    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
+    d.expect_format [time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
     d.run
 
     d = create_driver(CONFIG + %[
@@ -61,7 +61,7 @@ class FlumeOutputTest < Test::Unit::TestCase
     ], 'xxx.test.flumeplugin')
     assert_equal 'xxx.test.flumeplugin', d.tag
     d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.expect_format ['xxx.test.flumeplugin', time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
+    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
     d.run
 
     d = create_driver(CONFIG + %[
@@ -69,7 +69,7 @@ class FlumeOutputTest < Test::Unit::TestCase
     ], 'test')
     assert_equal 'test', d.tag
     d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.expect_format ['unknown', time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
+    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
     d.run
 
     d = create_driver(CONFIG + %[
@@ -78,8 +78,8 @@ class FlumeOutputTest < Test::Unit::TestCase
     assert_equal 'test.flumeplugin', d.tag
     d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
     d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
-    d.expect_format ['flumeplugin', time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
-    d.expect_format ['flumeplugin', time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
+    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
+    d.expect_format [time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
     d.run
   end
 
