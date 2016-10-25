@@ -41,7 +41,6 @@ class FlumeOutputTest < Test::Unit::TestCase
     d = create_driver
     d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
     d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
-    puts ({"k11" => "v11", "k12" => "v12"}.to_json)
     d.expect_format [d.tag, time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
     d.expect_format [d.tag, time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
     d.run
