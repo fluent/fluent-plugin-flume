@@ -16,11 +16,16 @@
 #    limitations under the License.
 #
 
-require 'fluent/output'
+require 'fluent/plugin/output'
 
-module Fluent
-  class FlumeOutput < BufferedOutput
+module Fluent::Plugin
+  class FlumeOutput < Output
     Fluent::Plugin.register_output('flume', self)
+
+    helpers :formatter, :compat_parameters
+
+    DEFAULT_BUFFER_TYPE = "memory"
+    DEFAULT_FORMAT_TYPE = 'json'
 
     config_param :host,      :string,  :default => 'localhost'
     config_param :port,      :integer, :default => 35863
@@ -28,8 +33,17 @@ module Fluent
     config_param :remove_prefix,    :string, :default => nil
     config_param :default_category, :string, :default => 'unknown'
     desc "The format of the thrift body. (default: json)"
-    config_param :format, :string, default: 'json'
+    config_param :format, :string, default: DEFAULT_FORMAT_TYPE
     config_param :trim_nl, :bool, default: true
+
+    config_section :buffer do
+      config_set_default :@type, DEFAULT_BUFFER_TYPE
+      config_set_default :chunk_keys, ['tag']
+    end
+
+    config_section :format do
+      config_set_default :@type, DEFAULT_FORMAT_TYPE
+    end
 
     unless method_defined?(:log)
       define_method(:log) { $log }
@@ -47,11 +61,10 @@ module Fluent
     def configure(conf)
       # override default buffer_chunk_limit
       conf['buffer_chunk_limit'] ||= '1m'
-
+      compat_parameters_convert(conf, :formatter)
       super
 
-      @formatter = Plugin.new_formatter(@format)
-      @formatter.configure(conf)
+      @formatter = formatter_create
     end
 
     def start
@@ -77,6 +90,14 @@ module Fluent
       [time, fr].to_msgpack
     end
 
+    def formatted_to_msgpack_binary
+      true
+    end
+
+    def multi_workers_ready?
+      true
+    end
+
     def write(chunk)
       socket = Thrift::Socket.new @host, @port, @timeout
       transport = Thrift::FramedTransport.new socket
@@ -84,7 +105,7 @@ module Fluent
       protocol = Thrift::CompactProtocol.new transport
       client = ThriftSourceProtocol::Client.new protocol
 
-      tag = chunk.key
+      tag = chunk.metadata.tag
       count = 0
       header = {}
       transport.open
