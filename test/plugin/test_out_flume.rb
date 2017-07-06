@@ -1,8 +1,12 @@
 require 'test/unit'
 require 'fluent/test'
+require 'fluent/test/helpers'
+require 'fluent/test/driver/output'
 require 'lib/fluent/plugin/out_flume'
 
 class FlumeOutputTest < Test::Unit::TestCase
+  include Fluent::Test::Helpers
+
   def setup
     Fluent::Test.setup
   end
@@ -12,8 +16,8 @@ class FlumeOutputTest < Test::Unit::TestCase
     port 35862
   ]
 
-  def create_driver(conf=CONFIG, tag='test')
-    Fluent::Test::BufferedOutputTestDriver.new(Fluent::FlumeOutput, tag) do
+  def create_driver(conf=CONFIG)
+    Fluent::Test::Driver::Output.new(Fluent::Plugin::FlumeOutput) do
       def write(chunk)
         chunk.read
       end
@@ -36,79 +40,82 @@ class FlumeOutputTest < Test::Unit::TestCase
   end
 
   def test_format
-    time = Time.parse("2011-12-21 13:14:15 UTC").to_i
+    time = event_time("2011-12-21 13:14:15 UTC")
 
     d = create_driver
-    d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
-    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
-    d.expect_format [time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
-    d.run
+    d.run(default_tag: 'test') do
+      d.feed(time, {"k11"=>"v11", "k12"=>"v12"})
+      d.feed(time, {"k21"=>"v21", "k22"=>"v22"})
+    end
+    assert_equal [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack, d.formatted[0]
+    assert_equal [time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack, d.formatted[1]
 
     d = create_driver(CONFIG + %[
       remove_prefix test
-    ], 'test.flumeplugin')
-    assert_equal 'test.flumeplugin', d.tag
+    ])
 
-    d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
-    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
-    d.expect_format [time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
-    d.run
-
-    d = create_driver(CONFIG + %[
-      remove_prefix test
-    ], 'xxx.test.flumeplugin')
-    assert_equal 'xxx.test.flumeplugin', d.tag
-    d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
-    d.run
+    d.run(default_tag: 'test.flumeplugin') do
+      d.feed(time, {"k11"=>"v11", "k12"=>"v12"})
+      d.feed(time, {"k21"=>"v21", "k22"=>"v22"})
+    end
+    assert_equal [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack, d.formatted[0]
+    assert_equal [time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack, d.formatted[1]
 
     d = create_driver(CONFIG + %[
       remove_prefix test
-    ], 'test')
-    assert_equal 'test', d.tag
-    d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
-    d.run
+    ])
+    d.run(default_tag: 'xxx.test.flumeplugin') do
+      d.feed(time, {"k11"=>"v11", "k12"=>"v12"})
+    end
 
     d = create_driver(CONFIG + %[
       remove_prefix test
-    ], 'test.flumeplugin')
-    assert_equal 'test.flumeplugin', d.tag
-    d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
-    d.expect_format [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack
-    d.expect_format [time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack
-    d.run
+    ])
+    d.run(default_tag: 'test') do
+      d.feed(time, {"k11"=>"v11", "k12"=>"v12"})
+    end
+    assert_equal [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack, d.formatted[0]
+
+    d = create_driver(CONFIG + %[
+      remove_prefix test
+    ])
+    d.run(default_tag: 'test.flumeplugin') do
+      d.feed(time, {"k11"=>"v11", "k12"=>"v12"})
+      d.feed(time, {"k21"=>"v21", "k22"=>"v22"})
+    end
+    assert_equal [time, {"k11"=>"v11", "k12"=>"v12"}.to_json].to_msgpack, d.formatted[0]
+    assert_equal [time, {"k21"=>"v21", "k22"=>"v22"}.to_json].to_msgpack, d.formatted[1]
   end
 
   def test_write
-    time = Time.parse("2011-12-21 13:14:15 UTC").to_i
+    time = event_time("2011-12-21 13:14:15 UTC")
 
     d = create_driver
-    d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.emit({"k21"=>"v21", "k22"=>"v22"}, time)
-    d.run
+    d.run(default_tag: 'test') do
+      d.feed(time, {"k11"=>"v11", "k12"=>"v12"})
+      d.feed(time, {"k21"=>"v21", "k22"=>"v22"})
+    end
 
     d = create_driver(CONFIG + %[
       remove_prefix test
-    ], 'test.flumeplugin')
-    assert_equal 'test.flumeplugin', d.tag
-    d.run
+    ])
+    d.end_if do
+      d.events.size >= 0
+    end
+    d.run(default_tag: 'test.flumeplugin')
 
     d = create_driver(CONFIG + %[
       remove_prefix test
-    ], 'xxx.test.flumeplugin')
-    assert_equal 'xxx.test.flumeplugin', d.tag
-    d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.run
+    ])
+    d.run(default_tag: 'xxx.test.flumeplugin') do
+      d.feed(time, {"k11"=>"v11", "k12"=>"v12"})
+    end
 
     d = create_driver(CONFIG + %[
       remove_prefix test
-    ], 'test')
-    assert_equal 'test', d.tag
-    d.emit({"k11"=>"v11", "k12"=>"v12"}, time)
-    d.run
+    ])
+    d.run(default_tag: 'test') do
+      d.feed(time, {"k11"=>"v11", "k12"=>"v12"})
+    end
   end
 end
